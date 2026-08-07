@@ -161,10 +161,6 @@ python scripts/collect_id_aaker.py
 
 **Output:** `classification_results/Indonesian-RoBERTa-Base_predictions.txt`
 
-### `classification/finalmodel.py` (optional)
-
-**Purpose:** Train a classifier on 100% of the data for use as an evaluator in Text Style Transfer experiments. No validation/test split — trains on the full dataset.
-
 ### `classification/check_data.py`
 
 **Purpose:** Quick integrity check — row count, columns, missing values, class distribution, language codes, engagement summary.
