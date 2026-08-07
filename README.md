@@ -181,26 +181,3 @@ python scripts/collect_id_aaker.py
 | `word_count` | int | Number of words in `cleaned_text` |
 
 ---
-
-## Citation
-
-If you use the ID-Aaker dataset or this code, please cite:
-
-```bibtex
-@article{hasani2026idaaker,
-  title   = {ID-Aaker: An Indonesian Social Media Dataset Annotated with
-             Aaker's Five Brand Personality Dimensions},
-  author  = {Hasani, Muhammad Fikri and Isa, Sani Muhammad and
-             Arifin, Yulyani and Budiharto, Widodo},
-  journal = {Data in Brief},
-  year    = {2026},
-  doi     = {10.17632/rvfcystzn6.1}
-}
-```
-
----
-
-## License
-
-Dataset: [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)  
-Code: MIT
