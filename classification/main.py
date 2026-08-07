@@ -1,14 +1,16 @@
 """
-ID-Aaker Brand Personality Classification — Baseline Benchmark
-==============================================================
-Reproducible single-model baseline using Indonesian-RoBERTa-Base.
+ID-Aaker Brand Personality Classification -- Baseline Benchmark
+===============================================================
+Reproducible single-model baseline using IndoBERT-Large.
 Matches the configuration reported in the Data in Brief manuscript:
-  - Model:  flax-community/indonesian-roberta-base
+  - Model:  "indobenchmark/indobert-large-p1"
   - Split:  70% train, 15% validation, 15% test (label-stratified)
   - LR:     2e-5
+  - Batch:  4 per device + gradient_accumulation_steps=4 (effective 16)
   - Epochs: 10 (early stopping patience = 2)
   - Loss:   Class-weighted CrossEntropyLoss
   - Seed:   42
+  - GPU:    ~12 GB VRAM required (uses gradient checkpointing)
 
 Requirements:
     pip install torch transformers datasets scikit-learn pandas
@@ -18,7 +20,7 @@ Usage:
     2. python main.py
 
 Output:
-    classification_results/Indonesian-RoBERTa-Base_predictions.txt
+    classification_results/IndoBERT-Large_predictions.txt
 """
 
 import os
@@ -49,7 +51,7 @@ from transformers import (
 # The CSV can be downloaded from Mendeley Data: https://data.mendeley.com/datasets/rvfcystzn6/1
 CSV_PATH = "data/Aaker_Brand_Personality.csv"
 
-MODEL_ID = "flax-community/indonesian-roberta-base"
+MODEL_ID = "indobenchmark/indobert-large-p1"
 OUTPUT_DIR = "./classification_results"
 SEED = 42
 
@@ -158,24 +160,33 @@ model = AutoModelForSequenceClassification.from_pretrained(
     label2id=label2id,
 )
 
+# Enable gradient checkpointing for large model memory efficiency
+if hasattr(model, "gradient_checkpointing_enable"):
+    model.gradient_checkpointing_enable()
+
+# IndoBERT-Large: per_device_batch_size=4 + gradient_accumulation_steps=4
+# gives an effective batch size of 16 (matches manuscript)
 training_args = TrainingArguments(
     output_dir="./checkpoints",
     eval_strategy="epoch",
     save_strategy="epoch",
     learning_rate=2e-5,
-    per_device_train_batch_size=32,
+    per_device_train_batch_size=4,
     per_device_eval_batch_size=64,
+    gradient_accumulation_steps=4,
     num_train_epochs=10,
     weight_decay=0.01,
     load_best_model_at_end=True,
     metric_for_best_model="macro_f1",
     greater_is_better=True,
     logging_dir="./logs",
-    logging_steps=100,
+    logging_steps=50,
     seed=SEED,
     fp16=torch.cuda.is_available(),
+    gradient_checkpointing=True,
     report_to="none",
     remove_unused_columns=False,
+    dataloader_num_workers=0,
 )
 
 trainer = WeightedTrainer(
@@ -231,9 +242,9 @@ export_df = pd.DataFrame(
     }
 )
 
-out_path = os.path.join(OUTPUT_DIR, "Indonesian-RoBERTa-Base_predictions.txt")
+out_path = os.path.join(OUTPUT_DIR, "IndoBERT-Large_predictions.txt")
 with open(out_path, "w", encoding="utf-8") as f:
-    f.write(f"Model: Indonesian-RoBERTa-Base\n")
+    f.write(f"Model: IndoBERT-Large\n")
     f.write(f"Model ID: {MODEL_ID}\n")
     f.write(f"Test Macro-F1: {macro_f1:.4f}\n")
     f.write("=" * 70 + "\n")

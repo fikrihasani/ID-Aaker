@@ -149,17 +149,18 @@ python scripts/collect_id_aaker.py
 
 | Parameter | Value |
 |-----------|-------|
-| Model | `flax-community/indonesian-roberta-base` |
+| Model | `indobenchmark/indobert-large-p1` |
 | Split | 70% train / 15% val / 15% test |
 | Stratification | Label-stratified (`stratify=df['label']`) |
 | Learning rate | 2e-5 |
-| Batch size | 32 |
+| Batch size | 4 per device + gradient_accumulation_steps=4 (effective 16) |
 | Epochs | 10 |
 | Early stopping | patience = 2 |
+| Gradient checkpointing | Enabled (for 12 GB VRAM) |
 | Loss | Class-weighted CrossEntropyLoss |
 | Seed | 42 |
 
-**Output:** `classification_results/Indonesian-RoBERTa-Base_predictions.txt`
+**Output:** `classification_results/IndoBERT-Large_predictions.txt`
 
 ### `classification/check_data.py`
 
