@@ -45,18 +45,17 @@ data/
 
 ### 2. Install Dependencies
 
+For statistics & visualizations:
 ```bash
 pip install pandas matplotlib seaborn scikit-learn
 ```
 
-For the classifier, also install:
-
+For the classifier:
 ```bash
 pip install torch transformers datasets
 ```
 
-For data collection, also install:
-
+For data collection (requires X API pay-per-use account):
 ```bash
 pip install tweepy python-dotenv
 ```
@@ -103,15 +102,15 @@ python classification/main.py
 
 **Purpose:** Collect tweets from 24 Indonesian brand accounts using X API v2.
 
-**Requires:** X API Pro-tier Bearer Token (pay-per-use, ~$0.005/post read).
-
-**Endpoint:** `GET /2/tweets/search/all`  
+**Endpoint:** `GET /2/tweets/search/all` (full-archive search)  
 **Query:** `from:{username} -is:retweet`  
 **Output:** `id_aaker_raw.csv` (14 columns: tweet metadata + personality label)
 
+> **Access & cost:** The full-archive search endpoint is available to all X API pay-per-use developers. At ~$0.005 per post read, reproducing the full 75,756-instance dataset costs approximately $379. The pay-per-use monthly cap is 2 million reads. Register at [developer.x.com](https://developer.x.com) to obtain a Bearer Token.
+
 **Usage:**
 ```bash
-export X_BEARER_TOKEN="your-token-here"
+export X_BEARER_TOKEN="your-bearer-token"
 python scripts/collect_id_aaker.py
 ```
 
