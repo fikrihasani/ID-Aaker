@@ -1,0 +1,20 @@
+# ID-Aaker — reproducibility requirements
+#
+# Statistical and visualization scripts: versions verified against the released
+# Aaker_Brand_Personality.csv (scripts/class_distribution.py was re-run with these).
+pandas==3.0.3
+numpy==2.5.1
+matplotlib==3.11.0
+seaborn==0.13.2
+scikit-learn>=1.2          # TF-IDF term analysis, scripts/visualization_term.py
+
+# Baseline classifier (classification/), training environment
+torch>=2.0
+transformers>=4.30
+datasets>=2.14
+accelerate>=0.20
+
+# Data collection, scripts/collect_id_aaker.py
+# Requires X API v2 pay-per-use access with a Bearer Token.
+tweepy>=4.14
+python-dotenv>=1.0

@@ -4,7 +4,8 @@ Companion code for the Data in Brief article:
 
 > **ID-Aaker: An Indonesian Social Media Dataset Annotated with Aaker's Five Brand Personality Dimensions**
 
-Mendeley Data: [10.17632/rvfcystzn6.1](https://data.mendeley.com/datasets/rvfcystzn6/1)
+Mendeley Data: [10.17632/rvfcystzn6](https://data.mendeley.com/datasets/rvfcystzn6) — the DOI resolves to the latest version of the dataset (`Aaker_Brand_Personality.csv`, UTF-8, 8 columns).
+
 
 ---
 
@@ -13,7 +14,7 @@ Mendeley Data: [10.17632/rvfcystzn6.1](https://data.mendeley.com/datasets/rvfcys
 ```
 ID-Aaker/
 │
-├── classification/                # Baseline classifier (Table 3)
+├── classification/                # Baseline classifier (Table 5)
 │   ├── main.py                    #   Training + evaluation (70/15/15 split)
 │   ├── finalmodel.py              #   Optional: train on 100% data (TST evaluator)
 │   └── check_data.py              #   Quick data quality check
@@ -21,12 +22,14 @@ ID-Aaker/
 ├── scripts/                       # Data pipeline & visualizations
 │   ├── collect_id_aaker.py        #   X API v2 data collection
 │   ├── clean_text.py              #   Anonymization & preprocessing
-│   ├── class_distribution.py      #   Figure 1 + Table 2 & 2b
+│   ├── class_distribution.py      #   Figure 1 + Tables 3 and 4
 │   └── visualization_term.py      #   Figure 2 (TF-IDF top terms)
 │
 ├── data/                          # Place CSV files here (not tracked)
 │   └── (Aaker_Brand_Personality.csv)
 │
+├── requirements.txt
+├── LICENSE                        # CC BY 4.0
 └── README.md
 ```
 
@@ -36,7 +39,7 @@ ID-Aaker/
 
 ### 1. Download the Dataset
 
-Download `Aaker_Brand_Personality.csv` from [Mendeley Data](https://data.mendeley.com/datasets/rvfcystzn6/1) and place it in the `data/` folder:
+Download `Aaker_Brand_Personality.csv` from [Mendeley Data](https://data.mendeley.com/datasets/rvfcystzn6) and place it in the `data/` folder:
 
 ```
 data/
@@ -45,18 +48,16 @@ data/
 
 ### 2. Install Dependencies
 
-For statistics & visualizations:
-```bash
-pip install pandas matplotlib seaborn scikit-learn
-```
+All three groups are listed in `requirements.txt`. Install the group you need:
 
-For the classifier:
 ```bash
-pip install torch transformers datasets
-```
+# statistics & visualizations
+pip install pandas==3.0.3 numpy==2.5.1 matplotlib==3.11.0 seaborn==0.13.2 scikit-learn
 
-For data collection (requires X API pay-per-use account):
-```bash
+# classifier
+pip install torch transformers datasets accelerate
+
+# data collection (requires X API pay-per-use account)
 pip install tweepy python-dotenv
 ```
 
@@ -70,7 +71,7 @@ Each script has a `# TODO` marker near the top. Update the path to point to your
 # Data quality check
 python classification/check_data.py
 
-# Figure 1 + Table 2 & 2b
+# Figure 1 + Tables 3 and 4
 python scripts/class_distribution.py
 
 # Figure 2
@@ -88,9 +89,9 @@ python classification/main.py
 |--------|----------|---------------------|
 | `scripts/collect_id_aaker.py` | Raw CSV (14 columns) | Data Acquisition section |
 | `scripts/clean_text.py` | `Aaker_Brand_Personality.csv` (8 columns) | Data Preprocessing section |
-| `scripts/class_distribution.py` | Figure 1, Table 2, Table 2b | Data Description section |
+| `scripts/class_distribution.py` | Figure 1, Tables 3 and 4 | Data Description section |
 | `scripts/visualization_term.py` | Figure 2 | Data Description section |
-| `classification/main.py` | Table 3 (baseline benchmark) | Data Description section |
+| `classification/main.py` | Table 5 (baseline benchmark) | Data Description section |
 | `classification/finalmodel.py` | Trained model (optional) | For TST downstream use |
 | `classification/check_data.py` | Console report | Quick verification |
 
@@ -170,6 +171,8 @@ python scripts/collect_id_aaker.py
 
 ## Dataset Columns
 
+The file is UTF-8 encoded, without a byte-order mark, and holds 75,756 rows.
+
 | Column | Type | Description |
 |--------|------|-------------|
 | `favorite_count` | int | Number of likes |
@@ -182,3 +185,16 @@ python scripts/collect_id_aaker.py
 | `word_count` | int | Number of words in `cleaned_text` |
 
 ---
+
+---
+
+## License
+
+The dataset (`Aaker_Brand_Personality.csv`) and the code in this repository are
+released under the [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/)
+(CC BY 4.0). The full legal text is in [`LICENSE`](LICENSE).
+
+The post texts were collected through the official X API and anonymized before
+release; redistribution of the raw API payload is not permitted under the X
+Developer Agreement and Policy, so the repository ships the processed corpus
+together with the collection script rather than the raw responses.
