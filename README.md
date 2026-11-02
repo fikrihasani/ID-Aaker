@@ -1,11 +1,10 @@
-# ID-Aaker — Reproducibility Repository
+# ID-Aaker: Reproducibility Repository
 
 Companion code for the Data in Brief article:
 
 > **ID-Aaker: An Indonesian Social Media Dataset Annotated with Aaker's Five Brand Personality Dimensions**
 
-Mendeley Data: [10.17632/rvfcystzn6](https://data.mendeley.com/datasets/rvfcystzn6) — the DOI resolves to the latest version of the dataset (`Aaker_Brand_Personality.csv`, UTF-8, 8 columns).
-
+Mendeley Data: [10.17632/rvfcystzn6.1](https://data.mendeley.com/datasets/rvfcystzn6/1) (`Aaker_Brand_Personality.csv`, UTF-8, 75,756 rows, 8 columns).
 
 ---
 
@@ -39,33 +38,65 @@ ID-Aaker/
 
 ### 1. Download the Dataset
 
-Download `Aaker_Brand_Personality.csv` from [Mendeley Data](https://data.mendeley.com/datasets/rvfcystzn6) and place it in the `data/` folder:
+Download `Aaker_Brand_Personality.csv` from [Mendeley Data](https://data.mendeley.com/datasets/rvfcystzn6/1) and place it in the `data/` folder:
 
 ```
 data/
 └── Aaker_Brand_Personality.csv
 ```
 
-### 2. Install Dependencies
+### 2. Loading the Dataset (Python and R)
 
-All three groups are listed in `requirements.txt`. Install the group you need:
+**Python (`pandas`):**
+```python
+import pandas as pd
+
+df = pd.read_csv("data/Aaker_Brand_Personality.csv", encoding="utf-8")
+print(df.shape)  # (75756, 8)
+print(df["personality"].value_counts())
+```
+
+**R:**
+```r
+df <- read.csv(
+  "data/Aaker_Brand_Personality.csv",
+  fileEncoding = "UTF-8",
+  stringsAsFactors = FALSE
+)
+dim(df)  # 75756 8
+table(df$personality)
+```
+
+### 3. Install Dependencies
+
+All dependency groups are listed in `requirements.txt`:
 
 ```bash
 # statistics & visualizations
-pip install pandas==3.0.3 numpy==2.5.1 matplotlib==3.11.0 seaborn==0.13.2 scikit-learn
+pip install pandas==3.0.3 numpy==2.5.1 matplotlib==3.11.0 seaborn==0.13.2 scikit-learn>=1.2
 
 # classifier
-pip install torch transformers datasets accelerate
+pip install torch>=2.0 transformers>=4.30 datasets>=2.14 accelerate>=0.20
 
 # data collection (requires X API pay-per-use account)
-pip install tweepy python-dotenv
+pip install tweepy>=4.14 python-dotenv>=1.0
 ```
 
-### 3. Update CSV Paths
+### 4. Update CSV Paths and Run
 
-Each script has a `# TODO` marker near the top. Update the path to point to your local copy of the CSV.
+Each script has a `# TODO` marker near the top. Update the path to point to your local copy of the CSV. The pipeline runs in this order:
 
-### 4. Run
+| Step | Script | Input | Output |
+|---|---|---|---|
+| 1 | `scripts/collect_id_aaker.py` | X API v2 access | `data/id_aaker_raw.csv` (14 columns, post text in `text`) |
+| 2 | `scripts/clean_text.py` | `data/id_aaker_raw.csv` (output of step 1) | `data/Aaker_Brand_Personality.csv` (8 columns) |
+| 3 | `scripts/class_distribution.py` | `data/Aaker_Brand_Personality.csv` | statistics + `class_distribution.png` |
+| 4 | `scripts/visualization_term.py` | `data/Aaker_Brand_Personality.csv` | `top_terms_per_personality.png` |
+| 5 | `classification/main.py` | `data/Aaker_Brand_Personality.csv` | `classification_results/IndoBERT-Large_predictions.txt` |
+
+`clean_text.py` accepts the collector's `text` column and the `full_text` column of the earlier raw export. Pseudonyms are assigned from a salted SHA-256 of each username, so two runs of the script produce identical files; the released file was anonymized with a different draw, so a re-run gives equivalent pseudonyms in the same `@user_NNNN` form rather than the identical strings.
+
+Run:
 
 ```bash
 # Data quality check
@@ -77,13 +108,16 @@ python scripts/class_distribution.py
 # Figure 2
 python scripts/visualization_term.py
 
-# Baseline classifier (requires GPU recommended)
+# Baseline classifier (GPU recommended)
 python classification/main.py
 ```
 
+Verified on this machine: `clean_text.py` (on a two-row raw file), `class_distribution.py`, `visualization_term.py` and `check_data.py` (on the released CSV), with Python 3.12 and the versions pinned in `requirements.txt` (pandas 3.0.3, NumPy 2.5.1, matplotlib 3.11.0, seaborn 0.13.2, scikit-learn 1.9.1). The collection and classifier scripts need X API access and a GPU respectively, and were not executed here.
+<!-- verified-end -->
+
 ---
 
-## Scripts — Manuscript Correspondence
+## Scripts: Manuscript Correspondence
 
 | Script | Produces | Manuscript Reference |
 |--------|----------|---------------------|
@@ -101,7 +135,7 @@ python classification/main.py
 
 ### `scripts/collect_id_aaker.py`
 
-**Purpose:** Collect tweets from 24 Indonesian brand accounts using X API v2.
+**Purpose:** Collect posts and replies from 24 Indonesian brand accounts using the official X API v2.
 
 **Endpoint:** `GET /2/tweets/search/all` (full-archive search)  
 **Query:** `from:{username} -is:retweet`  
@@ -117,16 +151,16 @@ python scripts/collect_id_aaker.py
 
 ### `scripts/clean_text.py`
 
-**Purpose:** Anonymize raw CSV → public CSV.
+**Purpose:** Anonymize raw CSV into the public CSV.
 
 **Input:** Internal raw CSV (with PII columns: `username`, `user_id_str`, etc.)  
 **Output:** `Aaker_Brand_Personality.csv` (8 columns, no PII)
 
 **Steps:**
-1. Drop PII columns (`user_id_str`, `username`, `tweet_url`, `image_url`, etc.)
-2. Replace `@username` mentions → `@user_NNNN` (deterministic pseudonyms)
-3. Replace all URLs → `https://dummy-link.com/ref`
-4. Compute `word_count`
+1. Drop PII and unredacted metadata columns (`user_id_str`, `username`, `tweet_id`, `created_at`, `conversation_id`, `in_reply_to_user_id`, etc.)
+2. Replace `@username` mentions with `@user_NNNN` (four-digit pseudonyms via regex `@\w+`)
+3. Replace all URLs with `https://dummy-link.com/ref` (via regex `https?://\S+`)
+4. Collapse excess whitespace and compute `word_count`
 
 ### `scripts/class_distribution.py`
 
@@ -165,36 +199,29 @@ python scripts/collect_id_aaker.py
 
 ### `classification/check_data.py`
 
-**Purpose:** Quick integrity check — row count, columns, missing values, class distribution, language codes, engagement summary.
+**Purpose:** Quick integrity check (row count, columns, missing values, class distribution, language codes, engagement summary).
 
 ---
 
 ## Dataset Columns
 
-The file is UTF-8 encoded, without a byte-order mark, and holds 75,756 rows.
+The file is UTF-8 encoded without a byte-order mark and contains 75,756 rows.
 
 | Column | Type | Description |
 |--------|------|-------------|
 | `favorite_count` | int | Number of likes |
-| `lang` | string | X API language code (mostly `in`) |
+| `lang` | string | X API language code (78.75% `in`, 18.46% `en`, 2.79% other) |
 | `quote_count` | int | Number of quote tweets |
 | `reply_count` | int | Number of replies |
 | `retweet_count` | int | Number of retweets |
-| `personality` | string | Aaker dimension (competence/sincerity/sophistication/excitement/ruggedness) |
+| `personality` | string | Aaker dimension (`competence`, `sincerity`, `sophistication`, `excitement`, `ruggedness`) |
 | `cleaned_text` | string | Pre-processed, anonymized text |
 | `word_count` | int | Number of words in `cleaned_text` |
 
 ---
 
----
-
 ## License
 
-The dataset (`Aaker_Brand_Personality.csv`) and the code in this repository are
-released under the [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/)
-(CC BY 4.0). The full legal text is in [`LICENSE`](LICENSE).
+The dataset (`Aaker_Brand_Personality.csv`) and the code in this repository are released under the [Creative Commons Attribution 4.0 International License](https://creativecommons.org/licenses/by/4.0/) (CC BY 4.0). The full legal text is provided in [`LICENSE`](LICENSE).
 
-The post texts were collected through the official X API and anonymized before
-release; redistribution of the raw API payload is not permitted under the X
-Developer Agreement and Policy, so the repository ships the processed corpus
-together with the collection script rather than the raw responses.
+The post texts are third-party content published publicly on X. They are distributed only in anonymized form: usernames are replaced by `@user_NNNN` pseudonyms and every URL by a dummy link. The unredacted payloads and the post identifiers are not redistributed, because they carry account identifiers and the addressees of replies that the anonymized release removes; this repository ships the processed corpus documentation together with the collection and preprocessing scripts.

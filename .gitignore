@@ -1,0 +1,9 @@
+# Data and secrets are never committed
+data/
+.env
+
+# Generated figures and caches
+class_distribution.png
+top_terms_per_personality.png
+__pycache__/
+*.pyc

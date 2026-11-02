@@ -1,4 +1,5 @@
-# ID-Aaker — reproducibility requirements
+# ID-Aaker: reproducibility requirements
+# Python 3.11 or later (verified here with 3.12)
 #
 # Statistical and visualization scripts: versions verified against the released
 # Aaker_Brand_Personality.csv (scripts/class_distribution.py was re-run with these).
@@ -6,7 +7,7 @@ pandas==3.0.3
 numpy==2.5.1
 matplotlib==3.11.0
 seaborn==0.13.2
-scikit-learn>=1.2          # TF-IDF term analysis, scripts/visualization_term.py
+scikit-learn>=1.2          # TF-IDF term analysis; verified here with 1.9.1
 
 # Baseline classifier (classification/), training environment
 torch>=2.0
